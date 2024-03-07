@@ -1,0 +1,50 @@
+[fredag 13.21] Tristan Taylor Kamp
+import xml.etree.ElementTree as ET
+import os
+ 
+# Parse the xlif file
+tree = ET.parse(r'C:\Users\Tristan Taylor Kamp\SMARTreports\AL\Translations\SMARTreports.en-US.xlf')
+root = tree.getroot()
+ 
+# Create a dictionary to store the source and target pairs
+translation_dict = {}
+ 
+# Iterate over all 'trans-unit' elements in the xlif file
+for file in root.iter('{urn:oasis:names:tc:xliff:document:1.2}file'):
+    for body in file.iter('{urn:oasis:names:tc:xliff:document:1.2}body'):
+        for trans_unit in body.iter('{urn:oasis:names:tc:xliff:document:1.2}trans-unit'):
+            source = trans_unit.find('{urn:oasis:names:tc:xliff:document:1.2}source').text
+            target = trans_unit.find('{urn:oasis:names:tc:xliff:document:1.2}target').text
+            translation_dict[source] = target
+ 
+# Replace the source values with target values in the xlif file
+for file in root.iter('{urn:oasis:names:tc:xliff:document:1.2}file'):
+    for body in file.iter('{urn:oasis:names:tc:xliff:document:1.2}body'):
+        for trans_unit in body.iter('{urn:oasis:names:tc:xliff:document:1.2}trans-unit'):
+            source = trans_unit.find('{urn:oasis:names:tc:xliff:document:1.2}source')
+            if source.text in translation_dict:
+                source.text = translation_dict[source.text]
+ 
+# Write the modified content back to the xlif file
+tree.write(r'C:\Users\Tristan Taylor Kamp\SMARTreports\AL\Translations\SMARTreports.en-US.xlf')
+ 
+# Directory containing the .al files
+directory = r'C:\Users\Tristan Taylor Kamp\SMARTreports\AL\src\report'
+ 
+# Iterate over all .al files in the directory
+for filename in os.listdir(directory):
+    if filename.endswith('.al'):
+        # Full path to the .al file
+        filepath = os.path.join(directory, filename)
+ 
+        # Read the .al file
+        with open(filepath, 'r') as file:
+            al_file_content = file.read()
+ 
+        # Replace the captions, tooltips etc.
+        for source, target in translation_dict.items():
+            al_file_content = al_file_content.replace(f'\'{source}\'', f'\'{target}\'')
+ 
+        # Write the modified content back to the .al file
+        with open(filepath, 'w') as file:
+            file.write(al_file_content)
